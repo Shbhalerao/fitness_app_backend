@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: FitnessApp
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+server:
+  servlet:
+    context-path: /api/fitness-app
+  port: 8081
+
+logging:
+    level:
+        org.springframework: INFO
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    patterns:
+        console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+        file:
+          name: logs/fitness-app.log
+          path: logs

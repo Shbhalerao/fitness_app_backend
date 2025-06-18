@@ -1,0 +1,26 @@
+server:
+  servlet:
+    context-path: /api/auth
+  port: 8083
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    root: INFO
+    com:
+      fitness:
+        auth-service: DEBUG
+
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+                BasicBinder: TRACE
+  pattern:
+    console:
+      color: true
+      log-format: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  file:
+    name: logs/auth-service.log
