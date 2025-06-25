@@ -62,7 +62,7 @@ public class FitnessCenterDetailsController {
 
     @GetMapping
     public ResponseEntity<Page<FitnessCenterDetailsResponse>> getFitnessCenterDetails(
-            @RequestParam List<Status> statuses,
+            @RequestParam(value = "statuses", required = false) List<Status> statuses,
             @RequestParam int page,
             @RequestParam int size) {
         Page<FitnessCenterDetailsResponse> response = fitnessCenterDetailsService.getFitnessCenterDetails(statuses, page, size);

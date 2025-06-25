@@ -101,7 +101,23 @@ public class FitnessCenterDetailsServiceImpl implements FitnessCenterDetailsServ
     @Override
     public Page<FitnessCenterDetailsResponse> getFitnessCenterDetails(List<Status> statuses, int page, int size) {
         logger.info("Fetching paginated fitness center details by statuses: {}", statuses);
-        Page<FitnessCenterDetails> pageResult = detailsRepository.findByStatusIn(statuses, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<FitnessCenterDetails> pageResult;
+        if (statuses == null || statuses.isEmpty()) {
+            pageResult = detailsRepository.findAll(PageRequest.of(page, size, Sort.by("id").descending()));
+        } else {
+            for (Status s : statuses) {
+                if (!Status.isExactStatus(s.name())) {
+                    throw new com.collaborate.FitnessApp.exceptions.BadRequestException("Invalid status: " + s);
+                }
+            }
+            pageResult = detailsRepository.findByStatusIn(statuses, PageRequest.of(page, size, Sort.by("id").descending()));
+            if (pageResult.isEmpty()) {
+                throw new ResourceNotFoundException("No records found for status: " + statuses);
+            }
+        }
+        if (pageResult.isEmpty()) {
+            throw new ResourceNotFoundException("No records found");
+        }
         return pageResult.map(FitnessCenterDetailsMapper::toResponseDto);
     }
 }

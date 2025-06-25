@@ -2,7 +2,6 @@ package com.collaborate.FitnessApp.mappers;
 
 import com.collaborate.FitnessApp.domain.dto.requests.TrainerRequest;
 import com.collaborate.FitnessApp.domain.dto.responses.TrainerResponse;
-import com.collaborate.FitnessApp.domain.entities.FitnessCenter;
 import com.collaborate.FitnessApp.domain.entities.Trainer;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public class TrainerMapper {
                 .firstName(trainer.getFirstName())
                 .lastName(trainer.getLastName())
                 .emailId(trainer.getEmailId())
-                .centerId(trainer.getCenterId().getId())
+                .centerId(trainer.getCenter().getId())
                 .password(trainer.getPassword())
                 .contactNo(trainer.getContactNo())
                 .role(trainer.getRole())
@@ -47,7 +46,7 @@ public class TrainerMapper {
                 .lastName(trainer.getLastName())
                 .emailId(trainer.getEmailId())
                 .contactNo(trainer.getContactNo())
-                .centerId(trainer.getCenterId() != null ? trainer.getCenterId().getId() : null)
+                .centerId(trainer.getCenter() != null ? trainer.getCenter().getId() : null)
                 .role(trainer.getRole())
                 .createdBy(trainer.getCreatedBy())
                 .createdDate(trainer.getCreatedDate())

@@ -47,8 +47,10 @@ public class ClientServiceImpl implements ClientService {
         }
         Optional<Trainer> trainer = trainerRepository.findById(clientRequest.getTrainerId());
         Client client = clientMapper.toEntity(clientRequest, trainer.orElse(null));
-        client.setCreatedBy(UserContext.getAuditField());
-        client.setUpdatedBy(UserContext.getAuditField());
+        client.setCreatedBy("SELF");
+        client.setUpdatedBy("SELF");
+        client.setRole(clientRequest.getRole());
+        client.setStatus(Status.ACTIVE);
         Client savedClient = clientRepository.save(client);
         return clientMapper.toResponse(savedClient);
     }
@@ -90,18 +92,37 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientResponse update(ClientRequest clientRequest){
-        if(clientRequest.getId() == null){
+    public ClientResponse update(ClientRequest clientRequest) {
+        if (clientRequest.getId() == null) {
             throw new BadRequestException("Please Provide Id to update");
         }
-        Optional<Client> client = clientRepository.findById(clientRequest.getId());
-        if (client.isEmpty()){
-            throw new ResourceNotFoundException("No such client present for id : "+clientRequest.getId());
-        }
-        Optional<Trainer> trainer = trainerRepository.findById(clientRequest.getTrainerId());
-        client.get().setUpdatedBy(UserContext.getAuditField());
-        Client saved = clientRepository.save(clientMapper.toEntity(clientRequest, trainer.get()));
-        return clientMapper.toResponse(saved);
+
+        Client existingClient = clientRepository.findById(clientRequest.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No such client present for id : " + clientRequest.getId()));
+
+        // Update only the fields provided in the request
+        Optional.ofNullable(clientRequest.getFirstName()).ifPresent(existingClient::setFirstName);
+        Optional.ofNullable(clientRequest.getLastName()).ifPresent(existingClient::setLastName);
+        Optional.ofNullable(clientRequest.getEmailId()).ifPresent(email -> {
+            if (!email.equals(existingClient.getEmailId()) && clientRepository.existsByEmailId(email)) {
+                throw new DuplicateResourceException("Email Id already exists: " + email);
+            }
+            existingClient.setEmailId(email);
+        });
+        Optional.ofNullable(clientRequest.getContactNo()).ifPresent(contact -> {
+            if (!contact.equals(existingClient.getContactNo()) && clientRepository.existsByContactNo(contact)) {
+                throw new DuplicateResourceException("Contact No already exists: " + contact);
+            }
+            existingClient.setContactNo(contact);
+        });
+        Optional.ofNullable(clientRequest.getTrainerId()).ifPresent(trainerId -> {
+            Trainer trainer = trainerRepository.findById(trainerId)
+                    .orElseThrow(() -> new BadRequestException("Invalid Trainer Id: " + trainerId));
+            existingClient.setTrainerId(trainer);
+        });
+        existingClient.setUpdatedBy("SELF");
+        Client savedClient = clientRepository.save(existingClient);
+        return clientMapper.toResponse(savedClient);
     }
 
     @Override

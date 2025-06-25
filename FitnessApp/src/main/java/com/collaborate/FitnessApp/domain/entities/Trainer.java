@@ -37,7 +37,7 @@ public class Trainer extends AuditInfo {
 
     @ManyToOne
     @JoinColumn(name = "center_id")
-    private FitnessCenter centerId;
+    private FitnessCenter center;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)

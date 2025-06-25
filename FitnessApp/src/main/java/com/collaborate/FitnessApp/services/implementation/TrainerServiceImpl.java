@@ -23,7 +23,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TrainerServiceImpl implements TrainerService {
@@ -54,7 +53,7 @@ public class TrainerServiceImpl implements TrainerService {
         if(trainerRequest.getCenterId() != null) {
             FitnessCenter center = fitnessCenterRepository.findById(trainerRequest.getCenterId())
                     .orElseThrow(() -> new BadRequestException("Invalid Fitness Center Id: " + trainerRequest.getCenterId()));
-            trainer.setCenterId(center);
+            trainer.setCenter(center);
         }
         trainer.setCreatedBy(UserContext.getAuditField());
         trainer.setUpdatedBy(UserContext.getAuditField());
@@ -111,17 +110,37 @@ public class TrainerServiceImpl implements TrainerService {
             logger.error("Null id in update request");
             throw new BadRequestException("Please provide id to update");
         }
+
         Trainer existing = trainerRepository.findById(trainerRequest.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("No such trainer present for id: " + trainerRequest.getId()));
-        Trainer updated = TrainerMapper.toEntity(trainerRequest);
-        if(trainerRequest.getCenterId() != null){
+
+        // Update only the fields provided in the request
+        if (trainerRequest.getFirstName() != null) {
+            existing.setFirstName(trainerRequest.getFirstName());
+        }
+        if (trainerRequest.getLastName() != null) {
+            existing.setLastName(trainerRequest.getLastName());
+        }
+        if (trainerRequest.getEmailId() != null) {
+            if (!trainerRequest.getEmailId().equals(existing.getEmailId()) && trainerRepository.existsByEmailId(trainerRequest.getEmailId())) {
+                throw new DuplicateResourceException("Trainer already exists with email: " + trainerRequest.getEmailId());
+            }
+            existing.setEmailId(trainerRequest.getEmailId());
+        }
+        if (trainerRequest.getContactNo() != null) {
+            if (!trainerRequest.getContactNo().equals(existing.getContactNo()) && trainerRepository.existsByContactNo(trainerRequest.getContactNo())) {
+                throw new DuplicateResourceException("Trainer already exists with contact: " + trainerRequest.getContactNo());
+            }
+            existing.setContactNo(trainerRequest.getContactNo());
+        }
+        if (trainerRequest.getCenterId() != null) {
             FitnessCenter center = fitnessCenterRepository.findById(trainerRequest.getCenterId())
                     .orElseThrow(() -> new BadRequestException("Invalid Fitness Center Id: " + trainerRequest.getCenterId()));
-            updated.setCenterId(center);
+            existing.setCenter(center);
         }
-        updated.setUpdatedBy(UserContext.getAuditField());
-        updated.setCreatedBy(existing.getCreatedBy());
-        Trainer saved = trainerRepository.save(updated);
+
+        existing.setUpdatedBy("SELF");
+        Trainer saved = trainerRepository.save(existing);
         logger.info("Trainer updated with id: {}", saved.getId());
         return TrainerMapper.toResponse(saved);
     }
@@ -160,6 +179,17 @@ public class TrainerServiceImpl implements TrainerService {
         if (trainerPage.isEmpty()) {
             logger.warn("No trainers found");
             throw new ResourceNotFoundException("No records found");
+        }
+        return trainerPage.map(TrainerMapper::toResponse);
+    }
+
+    @Override
+    public Page<TrainerResponse> getByCenterId(Long centerId, int page, int size) {
+        logger.info("Fetching trainers for centerId: {}, page: {}, size: {}", centerId, page, size);
+        Page<Trainer> trainerPage = trainerRepository.findAllByCenter_Id(centerId, PageRequest.of(page, size, Sort.by("id").descending()));
+        if (trainerPage.isEmpty()) {
+            logger.warn("No trainers found for centerId: {}", centerId);
+            throw new ResourceNotFoundException("No trainers found for centerId: " + centerId);
         }
         return trainerPage.map(TrainerMapper::toResponse);
     }

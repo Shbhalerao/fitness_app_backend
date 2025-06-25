@@ -7,6 +7,8 @@ import com.collaborate.FitnessApp.services.ClientDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,58 +25,60 @@ public class ClientDetailsController {
     }
 
     @GetMapping("/paged")
-    public Page<ClientDetailsResponse> getClientsPaged(
+    public ResponseEntity<Page<ClientDetailsResponse>> getClientsPaged(
             @RequestParam(value = "statuses", required = false) List<Status> statuses,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        return clientDetailsService.getClients(statuses, page, size);
+        return ResponseEntity.ok(clientDetailsService.getClients(statuses, page, size));
     }
 
     @PostMapping
-    public ClientDetailsResponse create(@RequestBody ClientDetailsRequest request) {
-        return clientDetailsService.create(request);
+    public ResponseEntity<ClientDetailsResponse> create(@RequestBody ClientDetailsRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(clientDetailsService.create(request));
     }
 
     @GetMapping("/by-client/{clientId}")
-    public ClientDetailsResponse getByClientId(@PathVariable Long clientId) {
-        return clientDetailsService.getByClientId(clientId);
+    public ResponseEntity<ClientDetailsResponse> getByClientId(@PathVariable Long clientId) {
+        return ResponseEntity.ok(clientDetailsService.getByClientId(clientId));
     }
 
     @GetMapping("/{id}")
-    public ClientDetailsResponse getById(@PathVariable Long id) {
-        return clientDetailsService.getById(id);
+    public ResponseEntity<ClientDetailsResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(clientDetailsService.getById(id));
     }
 
     @GetMapping("/all")
-    public List<ClientDetailsResponse> getAll() {
-        return clientDetailsService.getAll();
+    public ResponseEntity<List<ClientDetailsResponse>> getAll() {
+        return ResponseEntity.ok(clientDetailsService.getAll());
     }
 
     @GetMapping("/by-status")
-    public Page<ClientDetailsResponse> getByStatus(
+    public ResponseEntity<Page<ClientDetailsResponse>> getByStatus(
             @RequestParam(value = "statuses", required = false) List<Status> statuses,
             Pageable pageable) {
-        return clientDetailsService.getByStatus(statuses, pageable);
+        return ResponseEntity.ok(clientDetailsService.getByStatus(statuses, pageable));
     }
 
     @PutMapping("/{id}")
-    public ClientDetailsResponse update(@PathVariable Long id, @RequestBody ClientDetailsRequest request) {
+    public ResponseEntity<ClientDetailsResponse> update(@PathVariable Long id, @RequestBody ClientDetailsRequest request) {
         request.setId(id);
-        return clientDetailsService.update(request);
+        return ResponseEntity.ok(clientDetailsService.update(request));
     }
 
     @PatchMapping("/{id}/status")
-    public boolean updateStatusById(@PathVariable Long id, @RequestParam String status) {
-        return clientDetailsService.updateStatusById(status, id);
+    public ResponseEntity<Boolean> updateStatusById(@PathVariable Long id, @RequestParam String status) {
+        return ResponseEntity.ok(clientDetailsService.updateStatusById(status, id));
     }
 
     @PatchMapping("/client/{clientId}/status")
-    public boolean updateStatusByClientId(@PathVariable Long clientId, @RequestParam String status) {
-        return clientDetailsService.updateStatusByClientId(status, clientId);
+    public ResponseEntity<Boolean> updateStatusByClientId(@PathVariable Long clientId, @RequestParam String status) {
+        return ResponseEntity.ok(clientDetailsService.updateStatusByClientId(status, clientId));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         clientDetailsService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

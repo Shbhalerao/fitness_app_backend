@@ -16,4 +16,5 @@ public interface TrainerService {
     void delete(Long id);
     List<TrainerResponse> getByStatus(String status);
     Page<TrainerResponse> getTrainers(java.util.List<Status> statuses, int page, int size);
+    Page<TrainerResponse> getByCenterId(Long centerId, int page, int size);
 }

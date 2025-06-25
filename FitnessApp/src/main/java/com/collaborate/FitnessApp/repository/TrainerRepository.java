@@ -22,4 +22,6 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     List<Trainer> findByStatus(String status);
 
     Optional<Trainer> findByContactNo(String contactNo);
+
+    Page<Trainer> findAllByCenter_Id(Long centerId, Pageable pageable);
 }

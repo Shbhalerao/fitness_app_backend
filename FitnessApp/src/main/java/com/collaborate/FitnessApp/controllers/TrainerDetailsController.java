@@ -6,6 +6,8 @@ import com.collaborate.FitnessApp.domain.enums.Status;
 import com.collaborate.FitnessApp.services.TrainerDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,38 +24,40 @@ public class TrainerDetailsController {
     }
 
     @PostMapping
-    public TrainerDetailsResponse create(@RequestBody TrainerDetailsRequest request) {
-        return trainerDetailsService.create(request);
+    public ResponseEntity<TrainerDetailsResponse> create(@RequestBody TrainerDetailsRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(trainerDetailsService.create(request));
     }
 
     @GetMapping("/{id}")
-    public TrainerDetailsResponse getById(@PathVariable Long id) {
-        return trainerDetailsService.getById(id);
+    public ResponseEntity<TrainerDetailsResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(trainerDetailsService.getById(id));
     }
 
     @PutMapping("/{id}")
-    public TrainerDetailsResponse update(@PathVariable Long id, @RequestBody TrainerDetailsRequest request) {
+    public ResponseEntity<TrainerDetailsResponse> update(@PathVariable Long id, @RequestBody TrainerDetailsRequest request) {
         request.setId(id);
-        return trainerDetailsService.update(request);
+        return ResponseEntity.ok(trainerDetailsService.update(request));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         trainerDetailsService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/paged")
-    public Page<TrainerDetailsResponse> getAllPaged(
+    public ResponseEntity<Page<TrainerDetailsResponse>> getAllPaged(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        return trainerDetailsService.getAll(page, size);
+        return ResponseEntity.ok(trainerDetailsService.getAll(page, size));
     }
 
     @GetMapping("/by-status")
-    public Page<TrainerDetailsResponse> getByStatuses(
+    public ResponseEntity<Page<TrainerDetailsResponse>> getByStatuses(
             @RequestParam(value = "statuses", required = false) List<Status> statuses,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        return trainerDetailsService.getByStatuses(statuses, page, size);
+        return ResponseEntity.ok(trainerDetailsService.getByStatuses(statuses, page, size));
     }
 }

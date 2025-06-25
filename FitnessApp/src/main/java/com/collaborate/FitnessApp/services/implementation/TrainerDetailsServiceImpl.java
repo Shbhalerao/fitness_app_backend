@@ -46,8 +46,9 @@ public class TrainerDetailsServiceImpl implements TrainerDetailsService {
             throw new BadRequestException("Trainer not found for id: " + request.getTrainerId());
         }
         TrainerDetails entity = TrainerDetailsMapper.toEntity(request, trainerOpt.get());
-        entity.setCreatedBy(UserContext.getAuditField());
-        entity.setUpdatedBy(UserContext.getAuditField());
+        entity.setCreatedBy("SELF");
+        entity.setUpdatedBy("SELF");
+        entity.setStatus(trainerOpt.get().getStatus());
         TrainerDetails saved = trainerDetailsRepository.save(entity);
         logger.info("TrainerDetails created with id: {}", saved.getId());
         return TrainerDetailsMapper.toResponse(saved);
@@ -77,7 +78,8 @@ public class TrainerDetailsServiceImpl implements TrainerDetailsService {
             throw new BadRequestException("Trainer not found for id: " + request.getTrainerId());
         }
         TrainerDetails updated = TrainerDetailsMapper.toEntity(request, trainerOpt.get());
-        updated.setUpdatedBy(UserContext.getAuditField());
+        updated.setUpdatedBy("SELF");
+        updated.setStatus(trainerOpt.get().getStatus());
         TrainerDetails saved = trainerDetailsRepository.save(updated);
         logger.info("TrainerDetails updated with id: {}", saved.getId());
         return TrainerDetailsMapper.toResponse(saved);
@@ -111,6 +113,10 @@ public class TrainerDetailsServiceImpl implements TrainerDetailsService {
             detailsPage = trainerDetailsRepository.findAll(pageable);
         } else {
             detailsPage = trainerDetailsRepository.findAllByStatusIn(statuses, pageable);
+        }
+        if (detailsPage.isEmpty()) {
+            logger.warn("No TrainerDetails found for statuses: {}", statuses);
+            throw new ResourceNotFoundException("No records found for status: " + statuses);
         }
         return detailsPage.map(TrainerDetailsMapper::toResponse);
     }

@@ -1,13 +1,15 @@
 package com.collaborate.FitnessApp.controllers;
 
-
 import com.collaborate.FitnessApp.domain.dto.requests.TrainerRequest;
 import com.collaborate.FitnessApp.domain.dto.responses.TrainerResponse;
 import com.collaborate.FitnessApp.domain.enums.Status;
 import com.collaborate.FitnessApp.services.TrainerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -23,46 +25,62 @@ public class TrainerController {
     }
 
     @PostMapping
-    public TrainerResponse register(@RequestBody TrainerRequest request) {
-        return trainerService.register(request);
+    public ResponseEntity<TrainerResponse> register(@RequestBody TrainerRequest request) {
+        TrainerResponse response = trainerService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
-    public TrainerResponse getById(@PathVariable Long id) {
-        return trainerService.getById(id);
+    public ResponseEntity<TrainerResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(trainerService.getById(id));
     }
 
     @GetMapping("/email/{emailId}")
-    public TrainerResponse getByEmailId(@PathVariable String emailId) {
-        return trainerService.getByEmailId(emailId);
+    public ResponseEntity<TrainerResponse> getByEmailId(@PathVariable String emailId) {
+        return ResponseEntity.ok(trainerService.getByEmailId(emailId));
     }
 
     @GetMapping("/contact/{contactNo}")
-    public TrainerResponse getByContactNo(@PathVariable String contactNo) {
-        return trainerService.getByContactNo(contactNo);
+    public ResponseEntity<TrainerResponse> getByContactNo(@PathVariable String contactNo) {
+        return ResponseEntity.ok(trainerService.getByContactNo(contactNo));
     }
 
     @PutMapping("/{id}")
-    public TrainerResponse update(@PathVariable Long id, @RequestBody TrainerRequest request) {
+    public ResponseEntity<TrainerResponse> update(@PathVariable Long id, @RequestBody TrainerRequest request) {
         request.setId(id);
-        return trainerService.update(request);
+        return ResponseEntity.ok(trainerService.update(request));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         trainerService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status/{status}")
-    public List<TrainerResponse> getByStatus(@PathVariable String status) {
-        return trainerService.getByStatus(status);
+    public ResponseEntity<List<TrainerResponse>> getByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(trainerService.getByStatus(status));
     }
 
     @GetMapping("/paged")
-    public Page<TrainerResponse> getPaged(
+    public ResponseEntity<Page<TrainerResponse>> getPaged(
             @RequestParam(value = "statuses", required = false) List<Status> statuses,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
-        return trainerService.getTrainers(statuses, page, size);
+            Page<TrainerResponse> result = trainerService.getTrainers(statuses, page, size);
+            return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/center/{centerId}")
+    public ResponseEntity<Page<TrainerResponse>> getByCenterId(
+            @PathVariable Long centerId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        try {
+            Page<TrainerResponse> result = trainerService.getByCenterId(centerId, page, size);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 }

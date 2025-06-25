@@ -3,6 +3,7 @@ package com.collaborate.FitnessApp.services.implementation;
 import com.collaborate.FitnessApp.domain.dto.requests.FitnessCenterRequest;
 import com.collaborate.FitnessApp.domain.dto.responses.FitnessCenterResponse;
 import com.collaborate.FitnessApp.domain.entities.FitnessCenter;
+import com.collaborate.FitnessApp.domain.enums.Role;
 import com.collaborate.FitnessApp.domain.enums.Status;
 import com.collaborate.FitnessApp.exceptions.DuplicateResourceException;
 import com.collaborate.FitnessApp.exceptions.ResourceNotFoundException;
@@ -47,6 +48,7 @@ public class FitnessCenterServiceImpl implements FitnessCenterService {
         }
         FitnessCenter entity = FitnessCenterMapper.toEntity(request);
         entity.setStatus(Status.ACTIVE);
+        entity.setRole(Role.ROLE_CENTER_ADMIN);
         FitnessCenter saved = fitnessCenterRepository.save(entity);
         log.info("Fitness center registered with id: {}", saved.getId());
         return FitnessCenterMapper.toResponseDto(saved);
@@ -110,7 +112,23 @@ public class FitnessCenterServiceImpl implements FitnessCenterService {
     @Override
     public Page<FitnessCenterResponse> getFitnessCenters(List<Status> statuses, int page, int size) {
         log.info("Fetching paginated fitness centers by statuses: {}", statuses);
-        Page<FitnessCenter> pageResult = fitnessCenterRepository.findByStatusIn(statuses, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<FitnessCenter> pageResult;
+        if (statuses == null || statuses.isEmpty()) {
+            pageResult = fitnessCenterRepository.findAll(PageRequest.of(page, size, Sort.by("id").descending()));
+        } else {
+            for (Status s : statuses) {
+                if (!Status.isExactStatus(s.name())) {
+                    throw new com.collaborate.FitnessApp.exceptions.BadRequestException("Invalid status: " + s);
+                }
+            }
+            pageResult = fitnessCenterRepository.findByStatusIn(statuses, PageRequest.of(page, size, Sort.by("id").descending()));
+            if (pageResult.isEmpty()) {
+                throw new ResourceNotFoundException("No records found for status: " + statuses);
+            }
+        }
+        if (pageResult.isEmpty()) {
+            throw new ResourceNotFoundException("No records found");
+        }
         return pageResult.map(FitnessCenterMapper::toResponseDto);
     }
 }
